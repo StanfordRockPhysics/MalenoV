@@ -1,10 +1,21 @@
 # Improved MalenoV
 <h3>The original MalenoV data, source code and instructions can be found at: https://github.com/bolgebrygg/MalenoV </h3>
 
-The souce code was developed on Python3. First, ensure that GPU resources are available on the server. Scond, run `pip install -r requirements.txt` to install all necessary packages.
+The souce code was developed on Python3. First, ensure that GPU resources are available on the server. Scond, run `pip install -r requirements.txt` to install all necessary packages. The project directory is structured as follows:
+
+```
+project
+│   README.md
+│   requirements.txt
+|   train_demo.py
+│   predict_demo.py
+└───data
+    │   F3_entire.segy
+    │   *.pts
+```
 
 <h3> Training models </h3>
-To run the training job, run `python train_demo.py`. Inside `demo_train.py`, one can specify input parameters, and customize the CNN model. Speficially, on the bottom part of the code block (~line 1555), one can find `filenames`, which specifies the relative path to the segy data; `cube_incr` specifies the **radius** of the cubes. 
+To run the training job, run `python train_demo.py`. Inside `train_demo.py`, one can specify input parameters, and customize the CNN model. Speficially, on the bottom part of the code block (~line 1555), one can find `filenames`, which specifies the relative path to the segy data; `cube_incr` specifies the **radius** of the cubes. 
 
 In `train_dict`, `files` specifies the list of files that are labeled data points (please refer to data provided from https://github.com/bolgebrygg/MalenoV for labeled data format); `num_tot_iterations` specifies the number of times we draw samples from the seismic cube (typically leave it to 1); `epochs` specifies the number of epochs for training; `num_train_ex` specifies the total number of training and validation data (a training/validation split of 0.2 is used but can be easily changed); `batch_size` specifies the size of the mini-batch for each iteration; `data_augmentation` is set to `False` since it is not implemented at this moment; `save_model` specifies if we'd like to save the keras model into .h5 format; `save_location` specifies the path to the saved model if we set `save_model` to `True`; `test_size` specifies the number of test data; `sample_step` specifies the step size used in sparse sampling (set to 1 if one wish to do continous sampling).
 
