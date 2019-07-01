@@ -1632,7 +1632,7 @@ def master(segy_filename,inp_format,cube_incr,train_dict={},pred_dict={},mode = 
 
 
 #### ---- Run an instance of the master function ----
-filenames=['F3_entire.segy']    # name of the segy-cube(s) with data , separate by comma 'volume' for additional volumes
+filenames=['data/F3_entire.segy']    # name of the segy-cube(s) with data , separate by comma 'volume' for additional volumes
 inp_res = np.float32    # formatting of the input seismic (e.g. np.int8 for 8-bit data, np.float32 for 32-bit data, etc)
 cube_incr = 16    # number of increments in each direction to create a training cube
 
@@ -1653,7 +1653,7 @@ train_dict = {
 
 # Define the dictionary holding all the prediction parameters
 pred_dict = {
-    'keras_model' :  keras.models.load_model('demo.h5'), #keras.models.load_model('hei_wells_near_mid_far_ufar_35i_12e_10000.h5'), # input model to be used for prediction, to load a model use: keras.models.load_model('write_location')
+    'keras_model' :  keras.models.load_model('data/demo.h5'), #keras.models.load_model('hei_wells_near_mid_far_ufar_35i_12e_10000.h5'), # input model to be used for prediction, to load a model use: keras.models.load_model('write_location')
     'section_edge' : np.asarray([339, 339, 32+300, 32+400, 132, 1840-132]), # inline and xline section to be predicted (all depths), must contain xline
     'show_feature' : False,    # Show the distinct features before they are combined to a prediction
     'plot_type': 'inline',

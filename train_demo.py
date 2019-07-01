@@ -1,7 +1,8 @@
 ### Function for seismic facies prediction using Convolutional Neural Nets (CNN)
 ### By: Charles Rutherford Ildstad
-### Date: 22.10.2017
-### For: ConocoPhillips, Tananger,
+### Modified by Iris Yang and Wei Chu
+### Date: 6.2019
+### For: CNPC-Riped
 
 
 # Make initial package imports
@@ -18,14 +19,11 @@ import os
 
 from keras.models import Sequential
 from keras.models import Model
-from keras.layers import Dense, Activation, Flatten, Dropout, MaxPooling3D
-from keras.layers import Conv3D
-from keras.callbacks import EarlyStopping
-from keras.callbacks import TensorBoard
-from keras.callbacks import LearningRateScheduler
-from matplotlib import gridspec
-
+from keras.layers import Conv3D, Dense, Activation, Flatten, Dropout, MaxPooling3D
 from keras.layers.normalization import BatchNormalization
+
+from keras.callbacks import TensorBoard, EarlyStopping, LearningRateScheduler
+from matplotlib import gridspec
 
 from shutil import copyfile
 
@@ -33,6 +31,7 @@ from shutil import copyfile
 #np.random.seed(7)
 # Confirm backend if in doubt
 #keras.backend.backend()
+
 os.environ["CUDA_VISIBLE_DEVICES"]="7"
 
 ### ---- Functions for Input data(SEG-Y) formatting and reading ----
@@ -453,117 +452,77 @@ def train_model(segy_obj,class_array,num_classes,cube_incr, cube_step_interval =
     # Check if the user wants to make a new model, or train an existing input model
     if keras_model == None:
         # Begin setting up model architecture and parameters
-        cube_size = 2*cube_incr+1
+        cube_size = 2 * cube_incr + 1
 
         #  This model is loosely built after that of Anders Waldeland (5 Convolutional layers
         #  and 2 fully connected layers with rectified linear and softmax activations)
         # We have added drop out and batch normalization our selves, and experimented with multi-prediction
         model = Sequential()
-
-
         
-        model.add(Conv3D(8, (5, 5, 5), padding='valid', input_shape=(cube_size,cube_size,cube_size,num_channels), strides=(1, 1, 1), \
-                         data_format="channels_last",name = 'conv_layer1'))
-        #model.add(Dropout(0.2))
+        model.add(Conv3D(8, (5, 5, 5), 
+                         padding='valid', 
+                         input_shape=(cube_size,cube_size,cube_size,num_channels), 
+                         strides=(1, 1, 1), 
+                         data_format="channels_last",
+                         name='conv_layer1'
+                         )
+                 )
         model.add(Activation('relu'))
-        model.add(MaxPooling3D(pool_size=(2, 2, 2), strides=(2,2,2), padding='same'))
-
-        model.add(Conv3D(16, (5, 5, 5), strides=(1, 1, 1), padding = 'valid',name = 'conv_layer2'))  
+        model.add(MaxPooling3D(pool_size=(2, 2, 2), 
+                               strides=(2,2,2), 
+                               padding='same'
+                              )
+                 )
+        model.add(Conv3D(16, (5, 5, 5), 
+                         strides=(1, 1, 1), 
+                         padding='valid',
+                         name='conv_layer2'
+                         )
+                 )  
         model.add(Activation('relu'))
-
-        model.add(Conv3D(32, (3, 3, 3), strides=(1, 1, 1), padding = 'valid',name = 'conv_layer3'))  
+        model.add(Conv3D(32, (3, 3, 3), 
+                         strides=(1, 1, 1), 
+                         padding='valid',
+                         name='conv_layer3'
+                         )
+                 )  
         model.add(Activation('relu'))
         
-        model.add(MaxPooling3D(pool_size=(2, 2, 2), strides=(2,2,2), padding='same'))
+        model.add(MaxPooling3D(pool_size=(2, 2, 2), 
+                               strides=(2, 2, 2), 
+                               padding='same'
+                              )
+                 )
         model.add(Flatten())
 
-        model.add(Dense(120,name = 'dense_layer1'))
+        model.add(Dense(120,
+                        name='dense_layer1'
+                       )
+                 )
         model.add(BatchNormalization())
         model.add(Activation('relu'))
 
-        model.add(Dense(84,name = 'attribute_layer'))
+        model.add(Dense(84,
+                        name='attribute_layer'
+                       )
+                 )
         model.add(BatchNormalization())
         model.add(Activation('relu'))
 
-        model.add(Dense(num_classes, name = 'pre-softmax_layer'))
+        model.add(Dense(num_classes, 
+                        name='pre-softmax_layer'
+                       )
+                 )
         model.add(Activation('softmax'))
-
-        '''
-        model.add(Conv3D(8, (5, 5, 5), padding='same', input_shape=(cube_size,cube_size,cube_size,num_channels), strides=(2, 2, 2), \
-                         data_format="channels_last",name = 'conv_layer1'))
-        #model.add(BatchNormalization())
-        model.add(Activation('relu'))
-        model.add(MaxPooling3D(pool_size=(2, 2, 2), strides=(2,2,2), padding='same'))
-
-        model.add(Conv3D(16, (3, 3, 3), strides=(1, 1, 1), padding = 'same',name = 'conv_layer2'))  
-        #model.add(Dropout(0.2))
-        #model.add(BatchNormalization())
-        model.add(Activation('relu'))
-        
-
-        model.add(Conv3D(32, (3, 3, 3), strides=(2, 2, 2), padding= 'same',name = 'conv_layer3'))
-        #model.add(Dropout(0.2))
-        #model.add(BatchNormalization())
-        model.add(Activation('relu'))
-        #model.add(Conv3D(64, (3, 3, 3), strides=(2, 2, 2), padding= 'same',name = 'conv_layer4'))
-        #model.add(Dropout(0.2))
-        #model.add(BatchNormalization())
-        #model.add(Activation('relu'))
-        #model.add(Conv3D(50, (3, 3, 3), strides=(2, 2, 2), padding= 'same',name = 'conv_layer5'))
-        model.add(MaxPooling3D(pool_size=(2, 2, 2), strides=(2,2,2), padding='same'))
-        model.add(Flatten())
-
-        model.add(Dense(50,name = 'dense_layer1'))
-        model.add(BatchNormalization())
-        model.add(Activation('relu'))
-        #model.add(Dropout(0.4))
-
-        #model.add(Dense(10,name = 'attribute_layer'))
-        #model.add(BatchNormalization())
-        #model.add(Activation('relu'))
-
-        model.add(Dense(num_classes, name = 'pre-softmax_layer'))
-        model.add(BatchNormalization())
-        model.add(Activation('softmax'))
-        
-
-        
-        model.add(Conv3D(50, (5, 5, 5), padding='same', input_shape=(cube_size,cube_size,cube_size,num_channels), strides=(4, 4, 4), \
-                         data_format="channels_last",name = 'conv_layer1'))
-        model.add(BatchNormalization())
-        model.add(Activation('relu'))
-        model.add(Conv3D(50, (3, 3, 3), strides=(2, 2, 2), padding = 'same',name = 'conv_layer2'))
-        model.add(Dropout(0.2))
-        model.add(BatchNormalization())
-        model.add(Activation('relu'))
-        model.add(Conv3D(50, (3, 3, 3), strides=(2, 2, 2), padding= 'same',name = 'conv_layer3'))
-        model.add(Dropout(0.2))
-        model.add(BatchNormalization())
-        model.add(Activation('relu'))
-        model.add(Conv3D(50, (3, 3, 3), strides=(2, 2, 2), padding= 'same',name = 'conv_layer4'))
-        model.add(Dropout(0.2))
-        model.add(BatchNormalization())
-        model.add(Activation('relu'))
-        model.add(Conv3D(50, (3, 3, 3), strides=(2, 2, 2), padding= 'same',name = 'conv_layer5'))
-        model.add(Flatten())
-        model.add(Dense(50,name = 'dense_layer1'))
-        model.add(BatchNormalization())
-        model.add(Activation('relu'))
-        model.add(Dense(10,name = 'attribute_layer'))
-        model.add(BatchNormalization())
-        model.add(Activation('relu'))
-        model.add(Dense(num_classes, name = 'pre-softmax_layer'))
-        model.add(BatchNormalization())
-        model.add(Activation('softmax'))
-        '''
 
         # initiate the Adam optimizer with a given learning rate (Note that this is adapted later)
         opt = keras.optimizers.adam(lr=0.001)
 
         # Compile the model with the desired loss, optimizer, and metric
         model.compile(loss='categorical_crossentropy',
-                  optimizer=opt,
-                  metrics=['accuracy'])
+                      optimizer=opt,
+                      metrics=['accuracy']
+                     )
     else:
         # Define the model we are performing training on as the input model
         model = keras_model
@@ -614,13 +573,14 @@ def train_model(segy_obj,class_array,num_classes,cube_incr, cube_step_interval =
             # history = LossHistory()
 
 
-            model.fit(x=x_train, y=y_train, batch_size=batch_size,\
-                                validation_split=0.2,\
-                                # callbacks=[history],\
-                                epochs=num_epochs,\
-                                shuffle=True)
-
-            
+            model.fit(x=x_train, 
+                      y=y_train, 
+                      batch_size=batch_size,
+                      validation_split=0.2,
+                      # callbacks=[history],
+                      epochs=num_epochs,
+                      shuffle=True
+                      )
 
         else:
             # !!! Currently does not work
@@ -1593,22 +1553,30 @@ def master(segy_filename,inp_format,cube_incr,cube_step_interval = 1,train_dict=
 
 
 #### ---- Run an instance of the master function ----
-filenames=['F3_entire.segy']    # name of the segy-cube(s) with data , separate by comma 'volume' for additional volumes
+filenames=['data/F3_entire.segy']    # name of the segy-cube(s) with data , separate by comma 'volume' for additional volumes
 inp_res = np.float32    # formatting of the input seismic (e.g. np.int8 for 8-bit data, np.float32 for 32-bit data, etc)
 cube_incr = 16    # number of increments in each direction to create a training cube
 
 # Define the dictionary holding all the training parameters
 train_dict = {
-    'files' : ['multi_else_ilxl.pts','multi_grizzly_ilxl.pts','multi_high_amp_continuous_ilxl.pts','multi_high_amplitude_ilxl.pts','multi_low_amp_dips_ilxl.pts','multi_low_amplitude_ilxl.pts','multi_low_coherency_ilxl.pts','multi_salt_ilxl.pts','multi_steep_dips_ilxl.pts'],    # list of names of class-adresses
+    'files' : ['data/multi_else_ilxl.pts',
+               'data/multi_grizzly_ilxl.pts',
+               'data/multi_high_amp_continuous_ilxl.pts',
+               'data/multi_high_amplitude_ilxl.pts',
+               'data/multi_low_amp_dips_ilxl.pts',
+               'data/multi_low_amplitude_ilxl.pts',
+               'data/multi_low_coherency_ilxl.pts',
+               'data/multi_salt_ilxl.pts',
+               'data/multi_steep_dips_ilxl.pts'],    # list of names of class-adresses
     'num_tot_iterations': 1,    # number of times we draw a new training ensemble/mini-batch
     'epochs' : 2,    # number of epochs we run on each training ensemble/mini-batch
-    'num_train_ex' : 6000,    # number of training examples in each training ensemble/mini-batch
-    'batch_size' : 64,    # number of training examples fed to the optimizer as a batch
+    'num_train_ex' : 50000,    # number of training examples in each training ensemble/mini-batch
+    'batch_size' : 128,    # number of training examples fed to the optimizer as a batch
     'opt_patience' : 10,    # number of epochs with the same accuracy before force breaking the training ensemble/mini-batch
     'data_augmentation' : False,    # whether or not we are using data augmentation
     'save_model' : False,    # whether or not we are saving the trained model
-    'save_location' : 'demo_fast',   # file name for the saved trained model
-    'test_size': 1000,
+    'save_location' : 'new_3',   # file name for the saved trained model
+    'test_size': 10000,
     'sample_step': 2
 }
 
