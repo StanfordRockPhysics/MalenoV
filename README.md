@@ -1,7 +1,7 @@
 # Improved MalenoV
 <h3>The original MalenoV data, source code and instructions can be found at: https://github.com/bolgebrygg/MalenoV </h3>
 
-The souce code was developed on Python3. First, ensure that GPU resources are available on the server. Scond, run `pip install -r requirements.txt` to install all necessary packages. The project directory is structured as follows:
+The souce code was developed on Python3. First, ensure that GPU resources are available on the server. Second, run `pip install -r requirements.txt` to install all necessary packages. The project directory is structured as follows:
 
 ```
 project
@@ -13,6 +13,11 @@ project
     │   F3_entire.segy
     │   *.pts
 ```
+
+<h3> Dataset </h3>
+
+All the data files should be placed under `data` directory, which are not included in this repository. The user can download example files can at: https://goo.gl/wb145Z
+Specifically, the `.segy` is the seismic file, and `.pts` are the labels. 
 
 <h3> Training models </h3>
 
